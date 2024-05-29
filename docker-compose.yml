@@ -1,0 +1,88 @@
+version: '3.5'
+volumes:
+  postgres_volume:
+services:
+  svca:
+    platform: linux/amd64
+    image: golang:1.22-alpine3.18
+    networks:
+      - temporal-network
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./svc-a:/go/src/go-svc-a
+    working_dir: /go/src/go-svc-a
+    depends_on:
+      - temporal
+  svcb:
+    platform: linux/amd64
+    image: node:20-alpine3.18
+    networks:
+      - temporal-network
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./svc-b:/opt/app/src
+    working_dir: /opt/app/src
+    depends_on:
+      - temporal
+  workflow:
+    platform: linux/amd64
+    image: node:20-alpine3.18
+    networks:
+      - temporal-network
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./workflow:/opt/app/src
+    working_dir: /opt/app/src
+    depends_on:
+      - temporal
+  ######################
+  postgresql:
+    container_name: temporal-postgresql
+    environment:
+      POSTGRES_PASSWORD: temporal
+      POSTGRES_USER: temporal
+    image: postgres:13.4
+    networks:
+    - temporal-network
+    ports:
+      - 5432:5432
+  temporal:
+    container_name: temporal
+    depends_on:
+      - postgresql
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=temporal
+      - POSTGRES_PWD=temporal
+      - POSTGRES_SEEDS=postgresql
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development_es.yaml
+    image: temporalio/auto-setup:1.13.4
+    networks:
+    - temporal-network
+    ports:
+      - 7233:7233
+    volumes:
+      - ./dynamicconfig:/etc/temporal/config/dynamicconfig
+  # the old UI, on 8088
+  temporal-web:
+    container_name: temporal-web
+    platform: linux/amd64
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_GRPC_ENDPOINT=temporal:7233
+      - TEMPORAL_PERMIT_WRITE_API=true
+    image: temporalio/web:1.13.0
+    networks:
+    - temporal-network
+    ports:
+      - 8088:8088
+
+networks:
+  temporal-network:
+    driver: bridge
+    name: temporal-network
