@@ -38,6 +38,7 @@ export class AppController {
         taskQueue: taskQueueA,
         workflowId: 'wf-id-' + Math.floor(Math.random() * 1000),
       });
+
       console.log(`Started workflow A ${handleA.workflowId}`);
       rs += 'svc A Handle:' + (await handleA.result());
       rs += `C: $${amountC - 30}\nA: $30\nB: $0\n\n\n`;

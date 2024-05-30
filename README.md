@@ -3,7 +3,7 @@
 ## Run with docker
 - [x] svc-a (golang) golang:1.22-alpine3.18
 - [x] svc-b (nestJS) node:20-bullseye-slim
-- [x] workflow (nestJS) node:20-bullseye-slim
+- [x] orchestration (nestJS) node:20-bullseye-slim
 
 ```bash
 docker-compose up -d
@@ -15,8 +15,8 @@ go mod tidy
 docker-compose exec svcb sh
 yarn
 
-# Setup client workflows
-docker-compose exec workflow sh
+# Setup client orchestrations
+docker-compose exec orchestration sh
 yarn
 ```
 
@@ -37,10 +37,10 @@ C -> B = $40
 
 
 ## Development
-- Inside `workflow` start api
+- Inside `orchestration` start api
 
 ```bash
-docker-compose exec workflow sh
+docker-compose exec orchestration sh
 yarn start
 ```
 ```typescript

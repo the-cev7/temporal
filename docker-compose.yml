@@ -26,7 +26,7 @@ services:
     working_dir: /opt/app/src
     depends_on:
       - temporal
-  workflow:
+  orchestration:
     platform: linux/amd64
     image: node:20-bullseye-slim
     networks:
@@ -34,7 +34,7 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      - ./workflow:/opt/app/src
+      - ./orchestration:/opt/app/src
     working_dir: /opt/app/src
     depends_on:
       - temporal
