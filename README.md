@@ -1,4 +1,4 @@
-# temporal for saga-pattern
+# Temporal for Saga-pattern
 
 ## Run with docker
 - [x] svc-a (golang) golang:1.22-alpine3.18
@@ -34,6 +34,21 @@ C -> B = $40
 - B = $40
 ```
 ![flow context](context-flow.png "Title")
+
+
+## Explain Flow
+![flow orchestration](orchestration.png "Title")
+
+Have 3 containers in this scenario
+- orchestration (containers for coordinator workflows)
+- svc-a (worker for will implement workflows)
+- svc-b (worker for will implement workflows)
+
+Based on the above process, orchestration is a way to coordinate local transactions so that transactions are executed or rolled back in the correct order. Whether to execute or rollback depends on the orchestrator's requirements.
+
+1. Start workflow `transferWorkflow` on taskQueue `TRANSFER_MONEY_A`. After worker `svc-a` execute completed. It will continue process
+2. Start workflow `transferWorkflow` on taskQueue `TRANSFER_MONEY_B`. After worker `svc-b` execute completed. It will continue process
+3. After resolved all transactions for each related service. It will response to FE and then notify that the entire process is complete
 
 
 ## Development
