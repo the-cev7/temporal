@@ -2,8 +2,8 @@
 
 ## Run with docker
 - [x] svc-a (golang) golang:1.22-alpine3.18
-- [x] svc-b (nestJS) node:20-alpine3.18
-- [x] workflow (nestJS) node:20-alpine3.18
+- [x] svc-b (nestJS) node:20-bullseye-slim
+- [x] workflow (nestJS) node:20-bullseye-slim
 
 ```bash
 docker-compose up -d
@@ -12,7 +12,11 @@ docker-compose exec svca sh
 go mod tidy
 
 # Setup nestJs
-docker-compose exec svca sh
+docker-compose exec svcb sh
+yarn
+
+# Setup client workflows
+docker-compose exec workflow sh
 yarn
 ```
 
@@ -40,29 +44,25 @@ docker-compose exec workflow sh
 yarn start
 ```
 ```typescript
-export async function transferWorkflow(
-  transferA: ITransfer,
-  transferB: ITransfer,
-): Promise<void> {
-  // Trigger by activities interface to svc-A
-  const rsA: Array<string | null> = await TransferMoneyA(transferA);
-  // Trigger by activities interface to svc-B
-  const rsB: Array<string | null> = await transferMoneyB(transferB);
-
-  console.log(rsB)
-  // TODO check results
-  setHandler(getTransferQuery, () => rsA);
-}
+// Start trigger to svc-A
+const handleA = await this.temporalClient.start(
+    'transferWorkflow',
+    {
+        args: [paramsA], // pass args to activities of svc-a
+        taskQueue: taskQueueA,  // use queueName for trigger to svc-a
+        workflowId: 'wf-id-' + Math.floor(Math.random() * 1000),
+    },
+);
 ```
 
-- Inside svc start worker A
+- Inside `svca` start worker A
 
 ```bash
 docker-compose exec svca sh
 go run cmd/worker.go
 ```
 
-- Inside svc start worker B
+- Inside `svcb` start worker B
 
 ```bash
 docker-compose exec svcb sh

@@ -5,6 +5,7 @@ import (
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
+	"go.temporal.io/sdk/workflow"
 
 	"svc_a"
 )
@@ -21,7 +22,11 @@ func main() {
 	defer c.Close()
 
 	w := worker.New(c, "TRANSFER_MONEY_A_TASK_QUEUE", worker.Options{})
-	w.RegisterActivity(svc_a.TransferMoneyA)
+	registerWFOptions := workflow.RegisterOptions{
+		Name: "transferWorkflow",
+	}
+	w.RegisterWorkflowWithOptions(svc_a.TransferWorkflow, registerWFOptions)
+	w.RegisterActivity(svc_a.TransferMoney)
 
 	// Start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())

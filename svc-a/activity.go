@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func TransferMoneyA(ctx context.Context, transfer Transfer) (string, error) {
+func TransferMoney(ctx context.Context, transfer Transfer) (string, error) {
 	str := fmt.Sprintf(
 		"\nTransfer $%f from user %s to user %s ReferenceId: %s\n",
 		transfer.Amount,

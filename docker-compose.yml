@@ -16,7 +16,7 @@ services:
       - temporal
   svcb:
     platform: linux/amd64
-    image: node:20-alpine3.18
+    image: node:20-bullseye-slim
     networks:
       - temporal-network
     stdin_open: true
@@ -28,7 +28,7 @@ services:
       - temporal
   workflow:
     platform: linux/amd64
-    image: node:20-alpine3.18
+    image: node:20-bullseye-slim
     networks:
       - temporal-network
     stdin_open: true
@@ -38,6 +38,8 @@ services:
     working_dir: /opt/app/src
     depends_on:
       - temporal
+    ports:
+      - 3000:3000
   ######################
   postgresql:
     container_name: temporal-postgresql

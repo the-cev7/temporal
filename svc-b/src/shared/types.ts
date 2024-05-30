@@ -1,6 +1,6 @@
 export interface ITransfer {
-    amount: number;
-    fromUser: string;
-    toUser: string;
-    referenceID: string;
+  amount: number;
+  fromUser: string;
+  toUser: string;
+  referenceID: string;
 }
