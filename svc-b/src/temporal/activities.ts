@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ITransfer } from '../shared/types';
+import { ITransfer, IOrder } from '../shared/types';
 
 @Injectable()
 export class Activities {
@@ -10,5 +10,12 @@ export class Activities {
     console.log(str);
 
     return str;
+  }
+
+  async order(order: IOrder): Promise<boolean> {
+    const str: string = `Order ID ${order.id} Success!`;
+    console.log(str);
+
+    return true;
   }
 }

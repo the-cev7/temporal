@@ -2,7 +2,8 @@ import { Module } from '@nestjs/common';
 import { TemporalModule } from 'nestjs-temporal';
 import { Runtime } from '@temporalio/worker';
 import { Connection } from '@temporalio/client';
-import { AppController } from './app.controller';
+import { OrderController } from './order.controller';
+import { PaymentController } from './payment.controller';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { AppController } from './app.controller';
       },
     }),
   ],
-  controllers: [AppController],
+  controllers: [OrderController, PaymentController],
   providers: [],
 })
 export class AppModule {}

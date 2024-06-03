@@ -4,3 +4,9 @@ export interface ITransfer {
   toUser: string;
   referenceID: string;
 }
+
+export interface IOrder {
+  id: string;
+  productId: number;
+  price: number;
+}

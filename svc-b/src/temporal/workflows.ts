@@ -1,9 +1,12 @@
-import { proxyActivities } from '@temporalio/workflow';
+import { proxyActivities, defineQuery, setHandler } from '@temporalio/workflow';
 import type { Activities } from './activities';
-import { ITransfer } from '../shared/types';
+import { ITransfer, IOrder } from '../shared/types';
+
+const isOrderQuery = defineQuery<boolean>('isOrder');
 
 const {
   transferMoney,
+  order,
   // cancellableFetch  // todo: demo usage
 } = proxyActivities<Activities>({
   retry: {
@@ -19,4 +22,12 @@ export async function transferWorkflow(transfer: ITransfer): Promise<string> {
   return rs;
   // return rsB
   // TODO check results
+}
+
+
+export async function orderWorkflow(data: IOrder): Promise<void> {
+  let isOrder: boolean = false
+  setHandler(isOrderQuery, () => isOrder);
+  await new Promise(f => setTimeout(f, 60000));
+  isOrder = await order(data);
 }

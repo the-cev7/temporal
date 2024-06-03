@@ -26,6 +26,18 @@ services:
     working_dir: /opt/app/src
     depends_on:
       - temporal
+  svcc:
+    platform: linux/amd64
+    image: node:20-bullseye-slim
+    networks:
+      - temporal-network
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./svc-c:/opt/app/src
+    working_dir: /opt/app/src
+    depends_on:
+      - temporal
   orchestration:
     platform: linux/amd64
     image: node:20-bullseye-slim
