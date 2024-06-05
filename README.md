@@ -147,7 +147,8 @@ curl -XPOST 'localhost:3000/payments' \
 -H 'Content-Type: application/json' \
 -d '{
   "orderId": "001",
-  "price": 28.99
+  "price": 28.99,
+  "failed": false
 }'
 ```
 
@@ -195,6 +196,27 @@ async postPayment(@Body() data: IStorePaymentDto): Promise<{
   paymentId: "002"
 }
 ```
+
+- If payment is failure, Order flow should be rollback/compensation all of activities. you can check with api
+```bash
+curl -XPOST 'localhost:3000/payments' \
+-H 'Content-Type: application/json' \
+-d '{
+  "orderId": "${orderID}",
+  "price": 28.99,
+  "failed": true
+}'
+```
+- And view response
+```bash
+# Step1: Create order success
+Order ID 6xu0iprfi4, Price +28.99  Success!
+# Step2: Create payment failure
+[orderWorkflow(wf-order-id-6xu0iprfi4)] Workflow cancelled along with its activity
+Compensation Order ID 6xu0iprfi4, Price -28.99 Success!
+
+```
+
 
 ### 5. Start workflow Payment
 - In orchestration repo, you can see logic start worker in `paymentController`
@@ -302,7 +324,8 @@ curl -XPOST 'localhost:3000/payments' \
 -H 'Content-Type: application/json' \
 -d '{
   "orderId": "001",
-  "price": 28.99
+  "price": 28.99,
+  "failed": false
 }'
 
 ```
