@@ -1,8 +1,5 @@
 import { Controller, Post, HttpCode, HttpStatus, Body } from '@nestjs/common';
-import {
-  WorkflowClient,
-  WorkflowExecutionAlreadyStartedError,
-} from '@temporalio/client';
+import { WorkflowClient } from '@temporalio/client';
 import { InjectTemporalClient } from 'nestjs-temporal';
 
 import { taskQueueOrder } from './shared/constants';
@@ -20,7 +17,6 @@ export class OrderController {
     status: number;
     orderId: string;
   }> {
-
     const id: string = (Math.random() + 1).toString(36).substring(2);
     // Create order from request
     const order: IStoreOrderDto = { ...data };
@@ -37,7 +33,7 @@ export class OrderController {
 
     return {
       status: 200,
-      orderId: order.id
-    }
+      orderId: order.id,
+    };
   }
 }

@@ -15,4 +15,5 @@ export interface IStorePaymentDto {
   id: string;
   orderId: string;
   name: number;
+  failed: boolean;
 }

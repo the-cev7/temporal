@@ -9,6 +9,7 @@ export const paymentWorkerProviders = [
     useFactory: async (activitiesService: Activities) => {
       const activities = {
         payment: activitiesService.payment.bind(activitiesService),
+        clearPayment: activitiesService.clearPayment.bind(activitiesService),
       };
 
       const connection = await NativeConnection.connect({

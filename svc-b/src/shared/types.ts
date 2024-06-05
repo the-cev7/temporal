@@ -10,3 +10,8 @@ export interface IOrder {
   productId: number;
   price: number;
 }
+
+export interface ICompensation {
+  message: string;
+  fn: () => Promise<void>;
+}
