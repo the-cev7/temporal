@@ -9,7 +9,10 @@ export const transferWorkerProviders = [
     useFactory: async (activitiesService: Activities) => {
       const activities = {
         order: activitiesService.order.bind(activitiesService),
-        clearOrder: activitiesService.clearOrder.bind(activitiesService),
+        revertOrder: activitiesService.revertOrder.bind(activitiesService),
+        notifyOrder: activitiesService.notifyOrder.bind(activitiesService),
+        revertNotifyOrder:
+          activitiesService.revertNotifyOrder.bind(activitiesService),
       };
 
       const connection = await NativeConnection.connect({
