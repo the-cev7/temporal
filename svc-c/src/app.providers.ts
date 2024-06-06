@@ -9,7 +9,10 @@ export const paymentWorkerProviders = [
     useFactory: async (activitiesService: Activities) => {
       const activities = {
         payment: activitiesService.payment.bind(activitiesService),
-        clearPayment: activitiesService.clearPayment.bind(activitiesService),
+        revertPayment: activitiesService.revertPayment.bind(activitiesService),
+        notifyPayment: activitiesService.notifyPayment.bind(activitiesService),
+        revertNotifyPayment:
+          activitiesService.revertNotifyPayment.bind(activitiesService),
       };
 
       const connection = await NativeConnection.connect({
@@ -21,7 +24,6 @@ export const paymentWorkerProviders = [
         connection,
         taskQueue: taskQueuePayment,
         activities,
-        workflowsPath: require.resolve('./temporal/workflows'),
       });
 
       await worker.run();

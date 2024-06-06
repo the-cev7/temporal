@@ -2,7 +2,6 @@ import { Controller, Post, HttpCode, HttpStatus, Body } from '@nestjs/common';
 import { WorkflowClient, WorkflowFailedError } from '@temporalio/client';
 import { InjectTemporalClient } from 'nestjs-temporal';
 
-import { taskQueuePayment } from './shared/constants';
 import { IStorePaymentDto } from './shared/types';
 
 @Controller('/payments')
@@ -22,35 +21,28 @@ export class PaymentController {
     const payment: IStorePaymentDto = { ...data };
     payment.id = id;
 
-    const handleOrder = this.temporalClient.getHandle(
-      'wf-order-id-' + data.orderId,
-    );
-    const orderStatus = await handleOrder.query('isOrder');
+    const handle = this.temporalClient.getHandle('wf-order-id-' + data.orderId);
+    const orderStatus = await handle.query('isOrder');
 
     if (!orderStatus) {
       return {
-        status: 400,
+        status: 422,
         paymentId: payment.id,
       };
     }
-
-    // Register workflows
-    const handle = await this.temporalClient.start('paymentWorkflow', {
-      args: [payment],
-      taskQueue: taskQueuePayment,
-      workflowId: 'wf-payment-id-' + id,
-    });
-    console.log(`Started workflow payment ${handle.workflowId}`);
     try {
+      await handle.signal('payment', payment);
+      await handle.signal('exit');
       await handle.result();
     } catch (err) {
       if (err instanceof WorkflowFailedError) {
-        console.log('ERROR payment');
-        await handleOrder.cancel();
+        console.log('ERROR OrderWorkflows');
       }
-    }
+      console.log(`Cancelled orderWorkflow ${handle.workflowId}`);
 
-    await handleOrder.signal('exit');
+      throw err;
+    }
+    console.log(`Completed orderWorkflow ${handle.workflowId}`);
 
     return {
       status: 200,

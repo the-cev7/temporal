@@ -29,7 +29,7 @@ export class OrderController {
       workflowId: 'wf-order-id-' + id,
     });
 
-    console.log(`Started workflow order ${handle.workflowId}`);
+    console.log(`Started orderWorkflow ${handle.workflowId}`);
 
     return {
       status: 200,
