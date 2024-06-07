@@ -11,7 +11,6 @@ services:
     tty: true
     volumes:
       - ./order:/opt/app/src
-      - ./temporal:/opt/app/src/temporal
     working_dir: /opt/app/src
     depends_on:
       - temporal
@@ -24,7 +23,6 @@ services:
     tty: true
     volumes:
       - ./payment:/opt/app/src
-      - ./temporal:/opt/app/src/temporal
     working_dir: /opt/app/src
     depends_on:
       - temporal
@@ -42,6 +40,18 @@ services:
       - temporal
     ports:
       - 3000:3000
+  workflow:
+    platform: linux/amd64
+    image: node:20-bullseye-slim
+    networks:
+      - temporal-network
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./temporal:/opt/app/src
+    working_dir: /opt/app/src
+    depends_on:
+      - temporal
   ######################
   postgresql:
     container_name: temporal-postgresql

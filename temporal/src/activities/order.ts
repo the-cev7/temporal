@@ -1,4 +1,4 @@
-import { IOrder } from '../types';
+import { IOrder } from "../types";
 
 export interface OrderActivityInterface {
   order(payload: IOrder): Promise<boolean>;

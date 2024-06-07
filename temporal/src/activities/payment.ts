@@ -1,4 +1,4 @@
-import { IPayment } from '../types';
+import { IPayment } from "../types";
 
 export interface PaymentActivityInterface {
   payment(payload: IPayment): Promise<void>;

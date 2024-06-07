@@ -5,15 +5,18 @@ import {
   defineSignal,
   isCancellation,
   Trigger,
-} from '@temporalio/workflow';
-import type { OrderActivityInterface, PaymentActivityInterface } from '../activities';
-import { IOrder, ICompensation, IPayment } from '../types';
-import { taskQueuePayment, taskQueueOrder } from '../constants';
-import { compensate } from '../utils';
+} from "@temporalio/workflow";
+import type {
+  OrderActivityInterface,
+  PaymentActivityInterface,
+} from "../activities";
+import { IOrder, ICompensation, IPayment } from "../types";
+import { taskQueuePayment, taskQueueOrder } from "../constants";
+import { compensate } from "../utils";
 
-const isOrderQuery = defineQuery<boolean>('isOrder');
-const exitWFSignal = defineSignal('exit');
-const paymentSignal = defineSignal<[IPayment]>('payment');
+const isOrderQuery = defineQuery<boolean>("isOrder");
+const exitWFSignal = defineSignal("exit");
+const paymentSignal = defineSignal<[IPayment]>("payment");
 
 // Activities Interface from outside worker [order worker]
 const { order, revertOrder, notifyOrder, revertNotifyOrder } =
@@ -22,8 +25,8 @@ const { order, revertOrder, notifyOrder, revertNotifyOrder } =
     retry: {
       maximumAttempts: 2,
     },
-    startToCloseTimeout: '30s',
-    heartbeatTimeout: '10s',
+    startToCloseTimeout: "30s",
+    heartbeatTimeout: "10s",
   });
 
 // Activities Interface from outside worker [payment worker]
@@ -33,14 +36,13 @@ const { payment, revertPayment, notifyPayment, revertNotifyPayment } =
     retry: {
       maximumAttempts: 2,
     },
-    startToCloseTimeout: '30s',
-    heartbeatTimeout: '10s',
+    startToCloseTimeout: "30s",
+    heartbeatTimeout: "10s",
   });
 
 export async function orderWorkflow(data: IOrder): Promise<void> {
   const compensations: ICompensation[] = [];
   const exited = new Trigger<void>();
-  const triggerPayment = new Trigger<void>();
 
   try {
     // Flow order step
@@ -50,35 +52,32 @@ export async function orderWorkflow(data: IOrder): Promise<void> {
     isOrder = await order(data);
     // successfully called, so clear if a failure occurs later
     compensations.unshift({
-      message: 'reversing order',
+      message: "reversing order",
       fn: () => revertOrder(data),
     });
     await notifyOrder(data);
     compensations.unshift({
-      message: 'reversing order',
+      message: "reversing order",
       fn: () => revertNotifyOrder(data),
     });
 
+    // let isPaymentCompleted: boolean = false
     // Flow payment step
     setHandler(paymentSignal, async (dataP: IPayment) => {
-      try {
-        await payment(dataP);
-        // successfully called, so clear if a failure occurs later
-        compensations.unshift({
-          message: 'reversing payment',
-          fn: () => revertPayment(dataP),
-        });
-        await notifyPayment(dataP);
-        // successfully called, so clear if a failure occurs later
-        compensations.unshift({
-          message: 'reversing payment',
-          fn: () => revertNotifyPayment(dataP),
-        });
+      await payment(dataP);
+      // successfully called, so clear if a failure occurs later
+      compensations.unshift({
+        message: "reversing payment",
+        fn: () => revertPayment(dataP),
+      });
+      await notifyPayment(dataP);
+      // successfully called, so clear if a failure occurs later
+      compensations.unshift({
+        message: "reversing payment",
+        fn: () => revertNotifyPayment(dataP),
+      });
 
-        triggerPayment.resolve();
-      } catch (err) {
-        triggerPayment.reject(err);
-      }
+      // isPaymentCompleted = true
     });
 
     // Flow shipping step
@@ -88,11 +87,10 @@ export async function orderWorkflow(data: IOrder): Promise<void> {
       exited.resolve();
     });
 
-    await triggerPayment;
     await exited;
   } catch (err) {
     if (isCancellation(err)) {
-      console.log('Workflow cancelled along with its activity');
+      console.log("Workflow cancelled along with its activity");
     } else {
       await compensate(compensations);
       throw err;

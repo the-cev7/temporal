@@ -23,7 +23,6 @@ export const transferWorkerProviders = [
         connection,
         taskQueue: taskQueueOrder,
         activities,
-        workflowsPath: require.resolve('../temporal/workflows/order'),
       });
 
       await worker.run();

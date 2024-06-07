@@ -2,34 +2,40 @@
 
 ## Run with docker
 - [x] orchestration (nestJS) node:20-bullseye-slim
-- [x] order nestJS node:20-bullseye-slim
-- [x] payment nestJS node:20-bullseye-slim
-- [ ] shipping nestJS node:20-bullseye-slim
+- [x] worker temporal (typescript) node:20-bullseye-slim
+- [x] order (nestJS) node:20-bullseye-slim
+- [x] payment (nestJS) node:20-bullseye-slim
+- [ ] shipping (nestJS) node:20-bullseye-slim
 
 Refer: https://github.com/temporalio/samples-typescript/tree/main/signals-queries
 
 ## Development
-Please symlink temporal folder into child service
+
+- Setup temporal (https://learn.temporal.io/getting_started/typescript/dev_environment/)
 
 ```bash
-ln -s order/temporal temporal
-ln -s payment/temporal temporal
-
+temporal server start-dev --ui-port 8080
 ```
 
+- Inside `temporal` start worker
+```bash
+cd temporal
+yarn && yarn start
+```
 - Inside `orchestration` start api
+
 ```bash
 cd orchestration
 yarn && yarn start
 ```
 
-- Inside `order` start api
+- Inside `order` start worker
 ```bash
 cd order
 yarn && yarn start
 ```
 
-- Inside `payment` start api
+- Inside `payment` start worker
 ```bash
 cd payment
 yarn && yarn start
@@ -51,6 +57,16 @@ yarn
 # Setup client orchestrations
 docker-compose exec orchestration bash
 yarn
+
+# Setup client orchestrations
+docker-compose exec temporal bash
+yarn
+```
+- Inside `temporal` start worker
+
+```bash
+docker-compose exec temporal bash
+yarn start
 ```
 
 - Inside `orchestration` start api

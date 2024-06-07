@@ -2,7 +2,7 @@ import { Controller, Post, HttpCode, HttpStatus, Body } from '@nestjs/common';
 import { WorkflowClient } from '@temporalio/client';
 import { InjectTemporalClient } from 'nestjs-temporal';
 
-import { taskQueueOrder } from './shared/constants';
+import { taskQueueOrderFlow } from './shared/constants';
 import { IStoreOrderDto } from './shared/types';
 
 @Controller('/orders')
@@ -25,7 +25,7 @@ export class OrderController {
     // Register workflows
     const handle = await this.temporalClient.start('orderWorkflow', {
       args: [order],
-      taskQueue: taskQueueOrder,
+      taskQueue: taskQueueOrderFlow,
       workflowId: 'wf-order-id-' + id,
     });
 

@@ -11,8 +11,7 @@ export const paymentWorkerProviders = [
         payment: svc.payment.bind(svc),
         revertPayment: svc.revertPayment.bind(svc),
         notifyPayment: svc.notifyPayment.bind(svc),
-        revertNotifyPayment:
-          svc.revertNotifyPayment.bind(svc),
+        revertNotifyPayment: svc.revertNotifyPayment.bind(svc),
       };
 
       const connection = await NativeConnection.connect({
