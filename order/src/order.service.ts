@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { IOrder } from '../shared/types';
+import { IOrder } from './shared/types';
 
 @Injectable()
-export class Activities {
+export class OrderService {
   constructor() {}
 
   async order(order: IOrder): Promise<boolean> {

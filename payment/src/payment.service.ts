@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { IPayment } from '../shared/types';
 import { heartbeat } from '@temporalio/activity';
+import { IPayment } from './shared/types';
 
 @Injectable()
-export class Activities {
+export class PaymentService {
   constructor() {}
 
   async payment(payment: IPayment): Promise<void> {

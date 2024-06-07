@@ -6,18 +6,19 @@ import {
   isCancellation,
   Trigger,
 } from '@temporalio/workflow';
-import type { Activities } from './activities';
-import { IOrder, ICompensation, IPayment } from '../shared/types';
-import { taskQueuePayment } from '../shared/constants';
-import { compensate } from './compensations';
-import { PaymentActivityInterface } from './interface';
+import type { OrderActivityInterface, PaymentActivityInterface } from '../activities';
+import { IOrder, ICompensation, IPayment } from '../types';
+import { taskQueuePayment, taskQueueOrder } from '../constants';
+import { compensate } from '../utils';
 
 const isOrderQuery = defineQuery<boolean>('isOrder');
 const exitWFSignal = defineSignal('exit');
 const paymentSignal = defineSignal<[IPayment]>('payment');
 
+// Activities Interface from outside worker [order worker]
 const { order, revertOrder, notifyOrder, revertNotifyOrder } =
-  proxyActivities<Activities>({
+  proxyActivities<OrderActivityInterface>({
+    taskQueue: taskQueueOrder, // use task queue from order worker
     retry: {
       maximumAttempts: 2,
     },
@@ -25,10 +26,10 @@ const { order, revertOrder, notifyOrder, revertNotifyOrder } =
     heartbeatTimeout: '10s',
   });
 
-// Activities Interface from outside worker [svc_c payment worker]
+// Activities Interface from outside worker [payment worker]
 const { payment, revertPayment, notifyPayment, revertNotifyPayment } =
   proxyActivities<PaymentActivityInterface>({
-    taskQueue: taskQueuePayment, // use task queue from svc_c worker
+    taskQueue: taskQueuePayment, // use task queue from payment worker
     retry: {
       maximumAttempts: 2,
     },
@@ -90,7 +91,6 @@ export async function orderWorkflow(data: IOrder): Promise<void> {
     await triggerPayment;
     await exited;
   } catch (err) {
-    console.log('Workflow comein');
     if (isCancellation(err)) {
       console.log('Workflow cancelled along with its activity');
     } else {

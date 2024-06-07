@@ -1,4 +1,4 @@
-import { ICompensation } from '../shared/types';
+import { ICompensation } from '../types';
 
 export async function compensate(compensations: ICompensation[] = []) {
   if (compensations.length > 0) {

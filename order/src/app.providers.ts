@@ -1,18 +1,17 @@
-import { Activities } from './temporal/activities';
+import { OrderService } from './order.service';
 import { NativeConnection, Worker } from '@temporalio/worker';
 import { taskQueueOrder } from './shared/constants';
 
 export const transferWorkerProviders = [
   {
     provide: 'TRANSFER_WORKER',
-    inject: [Activities],
-    useFactory: async (activitiesService: Activities) => {
+    inject: [OrderService],
+    useFactory: async (svc: OrderService) => {
       const activities = {
-        order: activitiesService.order.bind(activitiesService),
-        revertOrder: activitiesService.revertOrder.bind(activitiesService),
-        notifyOrder: activitiesService.notifyOrder.bind(activitiesService),
-        revertNotifyOrder:
-          activitiesService.revertNotifyOrder.bind(activitiesService),
+        order: svc.order.bind(svc),
+        revertOrder: svc.revertOrder.bind(svc),
+        notifyOrder: svc.notifyOrder.bind(svc),
+        revertNotifyOrder: svc.revertNotifyOrder.bind(svc),
       };
 
       const connection = await NativeConnection.connect({
@@ -24,7 +23,7 @@ export const transferWorkerProviders = [
         connection,
         taskQueue: taskQueueOrder,
         activities,
-        workflowsPath: require.resolve('./temporal/workflows'),
+        workflowsPath: require.resolve('../temporal/workflows/order'),
       });
 
       await worker.run();

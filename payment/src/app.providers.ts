@@ -1,18 +1,18 @@
-import { Activities } from './temporal/activities';
+import { PaymentService } from './payment.service';
 import { NativeConnection, Worker } from '@temporalio/worker';
 import { taskQueuePayment } from './shared/constants';
 
 export const paymentWorkerProviders = [
   {
     provide: 'TRANSFER_WORKER',
-    inject: [Activities],
-    useFactory: async (activitiesService: Activities) => {
+    inject: [PaymentService],
+    useFactory: async (svc: PaymentService) => {
       const activities = {
-        payment: activitiesService.payment.bind(activitiesService),
-        revertPayment: activitiesService.revertPayment.bind(activitiesService),
-        notifyPayment: activitiesService.notifyPayment.bind(activitiesService),
+        payment: svc.payment.bind(svc),
+        revertPayment: svc.revertPayment.bind(svc),
+        notifyPayment: svc.notifyPayment.bind(svc),
         revertNotifyPayment:
-          activitiesService.revertNotifyPayment.bind(activitiesService),
+          svc.revertNotifyPayment.bind(svc),
       };
 
       const connection = await NativeConnection.connect({

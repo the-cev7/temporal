@@ -2,19 +2,7 @@ version: '3.5'
 volumes:
   postgres_volume:
 services:
-  svca:
-    platform: linux/amd64
-    image: golang:1.22-alpine3.18
-    networks:
-      - temporal-network
-    stdin_open: true
-    tty: true
-    volumes:
-      - ./svc-a:/go/src/go-svc-a
-    working_dir: /go/src/go-svc-a
-    depends_on:
-      - temporal
-  svcb:
+  order:
     platform: linux/amd64
     image: node:20-bullseye-slim
     networks:
@@ -22,11 +10,12 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      - ./svc-b:/opt/app/src
+      - ./order:/opt/app/src
+      - ./temporal:/opt/app/src/temporal
     working_dir: /opt/app/src
     depends_on:
       - temporal
-  svcc:
+  payment:
     platform: linux/amd64
     image: node:20-bullseye-slim
     networks:
@@ -34,7 +23,8 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      - ./svc-c:/opt/app/src
+      - ./payment:/opt/app/src
+      - ./temporal:/opt/app/src/temporal
     working_dir: /opt/app/src
     depends_on:
       - temporal

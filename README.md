@@ -1,26 +1,102 @@
 # Temporal for Saga-pattern
 
 ## Run with docker
-- [x] svc-b [Order] nestJS node:20-bullseye-slim
-- [x] svc-c [Payment, Shipping] nestJS node:20-bullseye-slim
 - [x] orchestration (nestJS) node:20-bullseye-slim
+- [x] order nestJS node:20-bullseye-slim
+- [x] payment nestJS node:20-bullseye-slim
+- [ ] shipping nestJS node:20-bullseye-slim
 
 Refer: https://github.com/temporalio/samples-typescript/tree/main/signals-queries
+
+## Development
+Please symlink temporal folder into child service
+
+```bash
+ln -s order/temporal temporal
+ln -s payment/temporal temporal
+
+```
+
+- Inside `orchestration` start api
+```bash
+cd orchestration
+yarn && yarn start
+```
+
+- Inside `order` start api
+```bash
+cd order
+yarn && yarn start
+```
+
+- Inside `payment` start api
+```bash
+cd payment
+yarn && yarn start
+```
+
+
+## Development with docker
 
 ```bash
 docker-compose up -d
 # Setup nestJs
-docker-compose exec svcb bash
+docker-compose exec order bash
 yarn
 
 # Setup nestJs
-docker-compose exec svcc bash
+docker-compose exec payment bash
 yarn
 
 # Setup client orchestrations
 docker-compose exec orchestration bash
 yarn
 ```
+
+- Inside `orchestration` start api
+
+```bash
+docker-compose exec orchestration bash
+yarn start
+```
+
+- Inside `order` start worker Order
+
+```bash
+docker-compose exec order bash
+yarn start
+```
+
+- Inside `payment` start worker Payment
+
+```bash
+docker-compose exec payment bash
+yarn start
+```
+
+- Access on browser
+```bash
+## API orders
+curl -XPOST 'localhost:3000/orders' \
+-H 'Content-Type: application/json' \
+-d '{
+  "productId": 30979484,
+  "price": 28.99
+}'
+
+## API payment
+curl -XPOST 'localhost:3000/payments' \
+-H 'Content-Type: application/json' \
+-d '{
+  "orderId": "001",
+  "price": 28.99,
+  "failed": false
+}'
+
+```
+
+## View dashboard temporal
+http://localhost:8088/
 
 ## Context
 - Overview
@@ -105,7 +181,7 @@ async postOrder(@Body() data: IStoreOrderDto): Promise<{
 - start `orderWorkflow` will send workflow definition to `temporal server` with `workflowId` is `wf-order-id-001` on taskQueue=`ORDER_TASK_QUEUE`
 
 - Run worker order
-In svcb repo, you can see worker running in `transferWorkerProviders`
+In order repo, you can see worker running in `transferWorkerProviders`
 ```typescript
 // app.providers.ts
 export const transferWorkerProviders = [
@@ -282,7 +358,7 @@ export async function orderWorkflow(data: IOrder): Promise<void> {
 
 ```
 
-- In svcc repo, you can see worker running in `paymentWorkerProviders`
+- In payment repo, you can see worker running in `paymentWorkerProviders`
 ```typescript
 // app.providers.ts
 export const transferWorkerProviders = [
@@ -323,52 +399,3 @@ In this worker, you can receive data through temporal Server. And then execute b
 ### 3. Step3: Shipping
 
 ![flow context](context-flow-shipping-v2.png "flow v2")
-
-
-## Development
-- Inside `orchestration` start api
-
-```bash
-docker-compose exec orchestration bash
-yarn start
-```
-
-- Inside `svcb` start worker Order
-
-```bash
-docker-compose exec svcb bash
-yarn start
-```
-
-- Inside `svcc` start worker Payment
-
-```bash
-docker-compose exec svcc bash
-yarn start
-```
-
-- Access on browser
-```bash
-## API orders
-curl -XPOST 'localhost:3000/orders' \
--H 'Content-Type: application/json' \
--d '{
-  "productId": 30979484,
-  "price": 28.99
-}'
-
-## API payment
-curl -XPOST 'localhost:3000/payments' \
--H 'Content-Type: application/json' \
--d '{
-  "orderId": "001",
-  "price": 28.99,
-  "failed": false
-}'
-
-```
-
-
-## View dashboard temporal
-
-http://localhost:8088/
