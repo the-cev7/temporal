@@ -43,10 +43,12 @@ const { payment, revertPayment, notifyPayment, revertNotifyPayment } =
 export async function orderWorkflow(data: IOrder): Promise<void> {
   const compensations: ICompensation[] = [];
   const exited = new Trigger<void>();
+  const triggerPayment = new Trigger<void>();
 
   try {
     // Flow order step
     let isOrder: boolean = false;
+
     setHandler(isOrderQuery, () => isOrder);
     await new Promise((f) => setTimeout(f, 10000));
     isOrder = await order(data);
@@ -61,23 +63,26 @@ export async function orderWorkflow(data: IOrder): Promise<void> {
       fn: () => revertNotifyOrder(data),
     });
 
-    // let isPaymentCompleted: boolean = false
     // Flow payment step
     setHandler(paymentSignal, async (dataP: IPayment) => {
-      await payment(dataP);
-      // successfully called, so clear if a failure occurs later
-      compensations.unshift({
-        message: "reversing payment",
-        fn: () => revertPayment(dataP),
-      });
-      await notifyPayment(dataP);
-      // successfully called, so clear if a failure occurs later
-      compensations.unshift({
-        message: "reversing payment",
-        fn: () => revertNotifyPayment(dataP),
-      });
+      try {
+        await payment(dataP);
+        // successfully called, so clear if a failure occurs later
+        compensations.unshift({
+          message: "reversing payment",
+          fn: () => revertPayment(dataP),
+        });
+        await notifyPayment(dataP);
+        // successfully called, so clear if a failure occurs later
+        compensations.unshift({
+          message: "reversing payment",
+          fn: () => revertNotifyPayment(dataP),
+        });
 
-      // isPaymentCompleted = true
+        triggerPayment.resolve();
+      } catch (err) {
+        triggerPayment.reject(err);
+      }
     });
 
     // Flow shipping step
@@ -87,6 +92,7 @@ export async function orderWorkflow(data: IOrder): Promise<void> {
       exited.resolve();
     });
 
+    await triggerPayment;
     await exited;
   } catch (err) {
     if (isCancellation(err)) {

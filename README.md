@@ -10,6 +10,8 @@
 Refer: https://github.com/temporalio/samples-typescript/tree/main/signals-queries
 
 ## Development
+<details>
+    <summary>:point_right: Readmore</summary>
 
 - Setup temporal (https://learn.temporal.io/getting_started/typescript/dev_environment/)
 
@@ -40,9 +42,12 @@ yarn && yarn start
 cd payment
 yarn && yarn start
 ```
-
+</details>
 
 ## Development with docker
+
+<details>
+    <summary>:point_right: Readmore</summary>
 
 ```bash
 docker-compose up -d
@@ -89,8 +94,9 @@ yarn start
 docker-compose exec payment bash
 yarn start
 ```
+</details>
 
-- Access on browser
+- Access on terminal
 ```bash
 ## API orders
 curl -XPOST 'localhost:3000/orders' \
@@ -115,8 +121,11 @@ curl -XPOST 'localhost:3000/payments' \
 http://localhost:8088/
 
 ## Context
-- Overview
+- **Overview**
 ![flow context](context-flow-v2.jpg "flow v2")
+
+- **Sequence Diagram**
+![flow context](context-sequence.png "flow v2")
 
 - API Create Order. Start workflows `OrderWorkflow`, Handle orderActivity
 - API Create Payment. SignalPayment from `OrderWorkflow`, Handle paymentActivity
@@ -131,7 +140,7 @@ http://localhost:8088/
 ## Explain Flow multiple step
 ### 1. Step1: Order
 
-- API create order
+- **API create order**
 ```bash
 curl -XPOST 'localhost:3000/orders' \
 -H 'Content-Type: application/json' \
@@ -142,8 +151,7 @@ curl -XPOST 'localhost:3000/orders' \
 ```
 ![flow context](context-flow-order-v2.png "flow v2")
 
-- In orchestration repo, you can see logic in `orderController`
-  Api create orders receive data from object and then create order
+In orchestration repo, you can see logic in `orderController` Api create orders receive data from object and then create order
 
 ```typescript
 // order.controller.ts
@@ -165,7 +173,7 @@ async postOrder(@Body() data: IStoreOrderDto): Promise<{
 }
 
 ```
-- You can see the response data from logic above immediate
+You can see the response data from logic above immediate
 ```bash
 {
   status: 200,
@@ -173,9 +181,9 @@ async postOrder(@Body() data: IStoreOrderDto): Promise<{
 }
 ```
 
-- Start orderWorkflow
+- **Start orderWorkflow**
 
-In orchestration repo, you can see logic start worker in `orderController`
+In `orchestration` repo, you can see logic start worker in `orderController`
 ```typescript
 // order.controller.ts
 async postOrder(@Body() data: IStoreOrderDto): Promise<{
@@ -186,7 +194,7 @@ async postOrder(@Body() data: IStoreOrderDto): Promise<{
   // Register workflows
   const handle = await this.temporalClient.start('orderWorkflow', {
     args: [order],
-    taskQueue: taskQueueOrder,
+    taskQueue: taskQueueOrder, //ORDER_FLOW_TASK_QUEUE
     workflowId: 'wf-order-id-' + id,
   });
 
@@ -194,10 +202,31 @@ async postOrder(@Body() data: IStoreOrderDto): Promise<{
   ...
 }
 ```
-- start `orderWorkflow` will send workflow definition to `temporal server` with `workflowId` is `wf-order-id-001` on taskQueue=`ORDER_TASK_QUEUE`
 
-- Run worker order
-In order repo, you can see worker running in `transferWorkerProviders`
+In `temporal` repo, you can see logic register worker in `worker.ts`
+```typescript
+// worker.ts
+async function run() {
+  const connection = await NativeConnection.connect({
+    address: "temporal:7233",
+    // TLS and gRPC metadata configuration goes here.
+  });
+
+  const worker = await Worker.create({
+    connection,
+    taskQueue: taskQueueOrderFlow, // ORDER_FLOW_TASK_QUEUE
+    // Workflows are registered using a path as they run in a separate JS context.
+    workflowsPath: require.resolve("./workflows/order"),
+  });
+
+  await worker.run();
+}
+```
+
+Start `orderWorkflow` will send workflow definition to `temporal server` with `workflowId` is `wf-order-id-001` on taskQueue=`ORDER_FLOW_TASK_QUEUE`
+
+- **Run worker order**
+In `order` repo, you can see worker running `transferWorkerProviders`
 ```typescript
 // app.providers.ts
 export const transferWorkerProviders = [
@@ -213,7 +242,6 @@ export const transferWorkerProviders = [
       connection,
       taskQueue: taskQueueOrder, // ORDER_TASK_QUEUE
       activities,
-      workflowsPath: require.resolve('./temporal/workflows'),
     });
 
     await worker.run();
@@ -223,10 +251,11 @@ export const transferWorkerProviders = [
   },
 }];
 ```
-`transferWorkerProviders` will execute workflows activities and update status of order is success or failure
+`transferWorkerProviders` will execute activities and update status of order is success or failure
+You can see workflow send signal in this code `temporal/src/workflows/order.ts`
 
 ```typescript
-// temporal/workflows
+// workflows/order.ts
 export async function orderWorkflow(data: IOrder): Promise<void> {
   let isOrder: boolean = false
   setHandler(isOrderQuery, () => isOrder);
@@ -239,7 +268,8 @@ In the workflows, you can receive data through temporal Server. And then execute
 
 
 ### 2. Step2: Payment
-- API create payment
+- **API create payment**
+
 ```bash
 # API Create Payment 
 
@@ -253,8 +283,7 @@ curl -XPOST 'localhost:3000/payments' \
 ```
 ![flow context](context-flow-payment-v2.png "flow v2")
 
-- In orchestration repo, you can see logic in `paymentController`
-  Api create payments receive data from object and then check status orderQuery
+In `orchestration` repo, you can see logic in `paymentController`, Api create payments receive data from object and then check status orderQuery
 
 ```typescript
 // payment.controller.ts
@@ -281,7 +310,7 @@ async postPayment(@Body() data: IStorePaymentDto): Promise<{
   }
 }
 ```
-- You can see the response data from logic with status 400 if queryOrder is not completed
+You can see the response data from logic with status 400 if queryOrder is not completed
 ```bash
 {
   status: 400,
@@ -289,7 +318,7 @@ async postPayment(@Body() data: IStorePaymentDto): Promise<{
 }
 ```
 
-- If Order is success, Payment will return status 200, and then start new paymentWorkflow for payment business
+If Order is success, Payment will return status 200, and then start new paymentWorkflow for payment business
 ```bash
 {
   status: 200,
@@ -297,17 +326,17 @@ async postPayment(@Body() data: IStorePaymentDto): Promise<{
 }
 ```
 
-- If payment is failure, Order flow should be rollback/compensation all of activities. you can check with api
+If payment is failure, Order flow should be revert/compensation all of activities. you can check with api
 ```bash
 curl -XPOST 'localhost:3000/payments' \
 -H 'Content-Type: application/json' \
 -d '{
   "orderId": "${orderID}",
   "price": 28.99,
-  "failed": true
+  "failed": true # For enable/disable test failured
 }'
 ```
-- And view response
+And view response
 ```bash
 # Step1: Create order success
 Order ID 6xu0iprfi4, Price +28.99  Success!
@@ -318,8 +347,8 @@ Compensation Order ID 6xu0iprfi4, Price -28.99 Success!
 ```
 
 
-- Start worker Payment
-- In orchestration repo, you can see logic start worker in `paymentController`
+- **Start worker Payment**
+In `orchestration` repo, you can see logic start worker in `paymentController`
 ```typescript
 // payment.controller.ts
 async postPayment(@Body() data: IStorePaymentDto): Promise<{
@@ -329,6 +358,7 @@ async postPayment(@Body() data: IStorePaymentDto): Promise<{
     ...
     
     try {
+      // Send signal payment to orderWorkflow
       await handle.signal('payment', payment);
       ...
     } catch (err) {
@@ -342,39 +372,33 @@ async postPayment(@Body() data: IStorePaymentDto): Promise<{
   }
 
 ```
-- Signal `payment` will send signal to `temporal server` with `workflowId` is `wf-order-id-001`. And then temporal trigger to payment worker execute activities on taskQueue=`PAYMENT_TASK_QUEUE`
-You can see workflow send signal in this code `svc-b/src/temporal/workflows.ts`
+Orchestration, API order will send a signal to `temporal server` with `workflowId` is `wf-order-id-001`. And then temporal trigger to payment worker execute activities on taskQueue=`PAYMENT_TASK_QUEUE`
+You can see workflow send signal in this code `temporal/src/workflows/order.ts`
 ```typescript
-// workflows.ts`
+// workflows/order.ts`
 export async function orderWorkflow(data: IOrder): Promise<void> {
   ...
   // Flow payment step
   setHandler(paymentSignal, async (dataP: IPayment) => {
-    try {
-      await payment(dataP);
-      // successfully called, so clear if a failure occurs later
-      compensations.unshift({
-        message: 'reversing payment',
-        fn: () => revertPayment(dataP),
-      });
-      await notifyPayment(dataP);
-      // successfully called, so clear if a failure occurs later
-      compensations.unshift({
-        message: 'reversing payment',
-        fn: () => revertNotifyPayment(dataP),
-      });
-
-      triggerPayment.resolve();
-    } catch (err) {
-      triggerPayment.reject(err);
-    }
+    await payment(dataP);
+    // successfully called, so clear if a failure occurs later
+    compensations.unshift({
+      message: "reversing payment",
+      fn: () => revertPayment(dataP),
+    });
+    await notifyPayment(dataP);
+    // successfully called, so clear if a failure occurs later
+    compensations.unshift({
+      message: "reversing payment",
+      fn: () => revertNotifyPayment(dataP),
+    });
   });
   ...
 }
 
 ```
 
-- In payment repo, you can see worker running in `paymentWorkerProviders`
+In `payment` repo, you can see worker running in `paymentWorkerProviders`
 ```typescript
 // app.providers.ts
 export const transferWorkerProviders = [
@@ -403,7 +427,7 @@ export const transferWorkerProviders = [
 `paymentWorkerProviders` will execute workflows activities and handle payment business
 
 ```typescript
-// temporal/activities.ts
+// payment.service.ts
 async payment(payment: IPayment): Promise<void> {
   const str: string = `[Payment] ID ${payment.id}, Price +${payment.price} Success!`;
   console.log(str);
